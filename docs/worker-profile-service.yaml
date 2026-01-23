@@ -1,0 +1,344 @@
+openapi: 3.0.3
+info:
+  title: Worker Profile & Services API
+  description: API to manage worker profiles and service offerings in the Home Services Marketplace
+  version: 1.0.0
+
+servers:
+  - url: https://api.marketplace.com/profile
+    description: main production server
+  - url: https://staging.api.marketplace.com/profile
+    description: staging server for testing purposes only
+  - url: http://localhost:3000/profile
+    description: local development server
+
+paths:
+  /workers:
+    get:
+      summary: Returns a list of worker profiles
+      operationId: listWorkerProfiles
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: categories
+          in: query
+          description: Filter by one or more categories (e.g., ?categories=plumbing&categories=toiletry)
+          schema:
+            type: array
+            items:
+              type: string
+          style: form
+          explode: true
+        - name: active
+          in: query
+          schema:
+            type: boolean
+        - name: limit
+          in: query
+          schema:
+            type: integer
+        - name: offset
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: A JSON array of worker profiles
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  workers:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/WorkerProfile'
+                  total:
+                    type: integer
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+    post:
+      summary: Creates a worker profile
+      operationId: createWorkerProfile
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateWorkerProfileSchema'
+      responses:
+        '201':
+          description: A JSON representation of the created profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkerProfile'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /workers/{worker_id}:
+    parameters:
+      - in: path
+        name: worker_id
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      summary: Returns the details of a specific worker profile
+      operationId: getWorkerProfile
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkerProfile'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    patch:
+      summary: Updates a worker profile not that A worker can only update/delete their own profile and an Admins can update any profile
+      operationId: updateWorkerProfile
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateWorkerProfileSchema'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkerProfile'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+    delete:
+      summary: Deletes a worker profile
+      operationId: deleteWorkerProfile
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: Profile deleted successfully
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+components:
+  responses:
+    NotFound:
+      description: The specified resource was not found.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    ValidationError:
+      description: The payload contains invalid values.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+          description: Domain-specific error code
+        message:
+          type: string
+        detail:
+          oneOf:
+            - type: string
+            - type: array
+
+    CreateWorkerProfileSchema:
+      type: object
+      required:
+        - name
+        - categories
+        - bio
+      properties:
+        userId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        categories:
+          type: array
+          items:
+            type: string
+          description: List of service categories (e.g., plumbing, electrical)
+        bio:
+          type: string
+        experienceYears:
+          type: integer
+        certifications:
+          type: array
+          items:
+            type: string
+        skills:
+          type: array
+          items:
+            type: string
+        baseLocation:
+          type: object
+          properties:
+            address:
+              type: string
+            city:
+              type: string
+            lat:
+              type: number
+              format: double
+            lon:
+              type: number
+              format: double
+        serviceAreas:
+          type: array
+          items:
+            type: object
+            properties:
+              city:
+                type: string
+              note:
+                type: string
+          description: List of named service areas (city-level).
+        travelRadiusKm:
+          type: number
+        active:
+          type: boolean
+
+    UpdateWorkerProfileSchema:
+      type: object
+      properties:
+        name:
+          type: string
+        bio:
+          type: string
+        categories:
+          type: array
+          items:
+            type: string
+        experienceYears:
+          type: integer
+        certifications:
+          type: array
+          items:
+            type: string
+        skills:
+          type: array
+          items:
+            type: string
+        baseLocation:
+          type: object
+          properties:
+            address:
+              type: string
+            city:
+              type: string
+            lat:
+              type: number
+              format: double
+            lon:
+              type: number
+              format: double
+        serviceAreas:
+          type: array
+          items:
+            type: object
+            properties:
+              city:
+                type: string
+              note:
+                type: string
+        travelRadiusKm:
+          type: number
+        active:
+          type: boolean
+
+    WorkerProfile:
+      type: object
+      required:
+        - workerId
+        - name
+        - categories
+        - active
+      properties:
+        workerId:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        categories:
+          type: array
+          items:
+            type: string
+          description: List of service categories the worker offers
+        bio:
+          type: string
+        experienceYears:
+          type: integer
+        certifications:
+          type: array
+          items:
+            type: string
+        skills:
+          type: array
+          items:
+            type: string
+        baseLocation:
+          type: object
+          properties:
+            address:
+              type: string
+            city:
+              type: string
+            lat:
+              type: number
+              format: double
+            lon:
+              type: number
+              format: double
+        serviceAreas:
+          type: array
+          items:
+            type: object
+            properties:
+              city:
+                type: string
+              note:
+                type: string
+          description: Named service areas (city-leve) for search and routing
+        travelRadiusKm:
+          type: number
+        active:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
