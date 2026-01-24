@@ -1,0 +1,128 @@
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+
+model WorkerProfile {
+  id              String   @id @default(uuid())
+  userId          String   @unique
+  name            String
+  bio             String
+  experienceYears Int?
+  travelRadiusKm  Float?
+  active          Boolean  @default(true)
+
+  /// Flexible, non-query-heavy data
+  metadata        Json?
+
+  /// Relations
+  categories      WorkerCategory[]
+  skills          WorkerSkill[]
+  certifications  WorkerCertification[]
+  serviceAreas    ServiceArea[]
+  baseLocation    BaseLocation?
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("worker_profiles")
+}
+
+
+model Category {
+  id      String @id @default(uuid())
+  name    String @unique
+
+  workers WorkerCategory[]
+
+  @@map("categories")
+}
+
+model WorkerCategory {
+  workerId   String
+  categoryId String
+
+  worker     WorkerProfile @relation(fields: [workerId], references: [id], onDelete: Cascade)
+  category   Category      @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@id([workerId, categoryId])
+  @@map("worker_categories")
+}
+
+
+model Skill {
+  id      String @id @default(uuid())
+  name    String @unique
+
+  workers WorkerSkill[]
+
+  @@map("skills")
+}
+
+model WorkerSkill {
+  workerId String
+  skillId  String
+
+  worker   WorkerProfile @relation(fields: [workerId], references: [id], onDelete: Cascade)
+  skill    Skill         @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@id([workerId, skillId])
+  @@map("worker_skills")
+}
+
+
+model Certification {
+  id      String @id @default(uuid())
+  name    String @unique
+
+  workers WorkerCertification[]
+
+  @@map("certifications")
+}
+
+model WorkerCertification {
+  workerId        String
+  certificationId String
+
+  worker          WorkerProfile  @relation(fields: [workerId], references: [id], onDelete: Cascade)
+  certification   Certification  @relation(fields: [certificationId], references: [id], onDelete: Cascade)
+
+  @@id([workerId, certificationId])
+  @@map("worker_certifications")
+}
+
+
+model BaseLocation {
+  id        String @id @default(uuid())
+  workerId  String @unique
+
+  address   String?
+  city      String
+  lat       Float
+  lon       Float
+
+  worker    WorkerProfile @relation(fields: [workerId], references: [id], onDelete: Cascade)
+
+  @@map("base_locations")
+}
+
+
+model ServiceArea {
+  id        String @id @default(uuid())
+  workerId  String
+
+  city      String
+  note      String?
+
+  worker    WorkerProfile @relation(fields: [workerId], references: [id], onDelete: Cascade)
+
+  @@index([city])
+  @@map("service_areas")
+}
+

@@ -4,14 +4,14 @@ This is a microservice for managing worker profiles and service offerings in the
 
 ## Features
 
-- Create, read, update, and delete worker profiles
-- JWT-based authentication
-- Role-based access control (worker/admin)
-- Ownership validation
-- Input validation
-- Geo-based services (location, radius)
-- Pagination support
-- Filtering by categories and active status
+- **Worker Profile Management**: Create, read, update, and delete worker profiles
+- **Authentication**: JWT-based authentication
+- **Role-based Access Control**: Separate permissions for workers and admins
+- **Ownership Validation**: Ensure users can only access their own data
+- **Input Validation**: Validate incoming data
+- **Geo-based Services**: Location and radius-based services
+- **Pagination Support**: Handle large datasets with pagination
+- **Filtering**: Filter by categories and active status
 
 ## API Documentation
 

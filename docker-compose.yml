@@ -4,13 +4,13 @@ services:
   worker-profile-service:
     build: .
     ports:
-      - "3000:3000"
+      - "3002:3002"
     environment:
       - NODE_ENV=development
-      - PORT=3000
-      - DATABASE_URL=postgresql://user:password@db:5432/worker_profile
+      - PORT=3002
+      - DATABASE_URL=postgresql://postgres:1234567@db:5432/worker_profile_and_services_service_db
       - REDIS_URL=redis://redis:6379
-      - JWT_SECRET=your-secret-key
+      - JWT_SECRET=mysupersecretkey
     depends_on:
       - db
       - redis
@@ -21,9 +21,9 @@ services:
   db:
     image: postgres:13
     environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: worker_profile
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: "1234567"
+      POSTGRES_DB: worker_profile_and_services_service_db
     ports:
       - "5432:5432"
     volumes:
