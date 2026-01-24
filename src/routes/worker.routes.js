@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 
 const workerController = require('../controllers/worker.controller');
-const { authenticate } = require('../middlewares/auth.middleware');
+const auth = require('../middlewares/auth.middleware');
 const { checkRole } = require('../middlewares/role.middleware');
 const { checkOwnership } = require('../middlewares/ownership.middleware');
 const { validateRequest } = require('../middlewares/validate.middleware');

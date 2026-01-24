@@ -1,20 +1,31 @@
+const fs = require('fs');
+const path = require('path');
 const jwt = require('jsonwebtoken');
-const config = require('../config/config');
 
-const authenticate = (req, res, next) => {
+const publicKey = fs.readFileSync(
+  path.resolve(process.env.JWT_PUBLIC_KEY_PATH),
+  'utf8'
+);
+
+module.exports = function authMiddleware(req, res, next) {
   const authHeader = req.headers.authorization;
+
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ message: 'Access token required' });
+    return res.status(401).json({ message: 'Missing token' });
   }
 
-  const token = authHeader.substring(7);
+  const token = authHeader.split(' ')[1];
+
   try {
-    const decoded = jwt.verify(token, config.jwtSecret);
-    req.user = decoded;
+    const payload = jwt.verify(token, publicKey, {
+      algorithms: ['RS256'],
+      issuer: process.env.JWT_ISSUER,
+      audience: process.env.JWT_AUDIENCE,
+    });
+
+    req.user = payload; // { sub, role, iat, exp }
     next();
-  } catch (error) {
-    res.status(401).json({ message: 'Invalid or expired token' });
+  } catch (err) {
+    return res.status(401).json({ message: 'Invalid or expired token' });
   }
 };
-
-module.exports = { authenticate };
