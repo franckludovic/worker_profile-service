@@ -1,38 +1,17 @@
-version: '3.8'
 
 services:
-  worker-profile-service:
-    build: .
-    ports:
-      - "3002:3002"
-    environment:
-      - NODE_ENV=development
-      - PORT=3002
-      - DATABASE_URL=postgresql://postgres:1234567@db:5432/worker_profile_and_services_service_db
-      - REDIS_URL=redis://redis:6379
-      - JWT_SECRET=mysupersecretkey
-    depends_on:
-      - db
-      - redis
-    volumes:
-      - .:/app
-      - /app/node_modules
 
-  db:
-    image: postgres:13
+  worker-db:
+    image: postgres:15-alpine
+    container_name: worker_profile_and_services_service_db
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: "1234567"
       POSTGRES_DB: worker_profile_and_services_service_db
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-
-  redis:
-    image: redis:6-alpine
-    ports:
-      - "6379:6379"
 
 volumes:
   postgres_data:

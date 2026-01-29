@@ -7,10 +7,10 @@ let redisClient;
 const connectRedis = async () => {
   if (!redisClient) {
     redisClient = createClient({
-      url: config.redisUrl,
+      url: config.redisCacheUrl,
     });
 
-    redisClient.on('error', (err) => console.error('Redis Client Error', err));
+    redisClient.on('error', (err) => console.error('Redis Cache Client Error', err));
 
     await redisClient.connect();
   }
