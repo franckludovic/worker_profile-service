@@ -2,7 +2,7 @@ const workerService = require('../services/worker.service');
 
 const checkOwnership = async (req, res, next) => {
   const { worker_id } = req.params;
-  const userId = req.user.id;
+  const userId = req.user.sub;
   const userRole = req.user.role;
 
   // Admins can access any profile

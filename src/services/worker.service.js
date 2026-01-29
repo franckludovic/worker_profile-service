@@ -19,7 +19,7 @@ class WorkerService {
       where.categories = {
         some: {
           category: {
-            name: { in: categories }
+            name: { in: categories, mode: 'insensitive' }
           }
         }
       };
@@ -100,11 +100,14 @@ class WorkerService {
       // Create categories
       if (categories && categories.length > 0) {
         const categoryRecords = await Promise.all(
-          categories.map(name => tx.category.upsert({
-            where: { name },
-            update: {},
-            create: { name },
-          }))
+          categories.map(name => {
+            const lowerName = name.toLowerCase();
+            return tx.category.upsert({
+              where: { name: lowerName },
+              update: {},
+              create: { name: lowerName },
+            });
+          })
         );
         await tx.workerCategory.createMany({
           data: categoryRecords.map(cat => ({ workerId: newProfile.id, categoryId: cat.id })),
@@ -114,11 +117,14 @@ class WorkerService {
       // Create skills
       if (skills && skills.length > 0) {
         const skillRecords = await Promise.all(
-          skills.map(name => tx.skill.upsert({
-            where: { name },
-            update: {},
-            create: { name },
-          }))
+          skills.map(name => {
+            const lowerName = name.toLowerCase();
+            return tx.skill.upsert({
+              where: { name: lowerName },
+              update: {},
+              create: { name: lowerName },
+            });
+          })
         );
         await tx.workerSkill.createMany({
           data: skillRecords.map(skill => ({ workerId: newProfile.id, skillId: skill.id })),
@@ -128,11 +134,14 @@ class WorkerService {
       // Create certifications
       if (certifications && certifications.length > 0) {
         const certificationRecords = await Promise.all(
-          certifications.map(name => tx.certification.upsert({
-            where: { name },
-            update: {},
-            create: { name },
-          }))
+          certifications.map(name => {
+            const lowerName = name.toLowerCase();
+            return tx.certification.upsert({
+              where: { name: lowerName },
+              update: {},
+              create: { name: lowerName },
+            });
+          })
         );
         await tx.workerCertification.createMany({
           data: certificationRecords.map(cert => ({ workerId: newProfile.id, certificationId: cert.id })),
@@ -299,6 +308,48 @@ class WorkerService {
 
     const hasService = profile.categories.some(cat => cat.category.name === serviceId);
     return { available: hasService };
+  }
+
+  async filterWorkersByServices(serviceList) {
+    if (!serviceList || serviceList.length === 0) {
+      return { workers: [], total: 0 };
+    }
+
+    // Convert serviceList to lowercase for case-insensitive matching
+    const lowerServiceList = serviceList.map(service => service.toLowerCase());
+
+    const workers = await prismaClient.workerProfile.findMany({
+      where: {
+        categories: {
+          some: {
+            category: {
+              name: { in: lowerServiceList }
+            }
+          }
+        }
+      },
+      include: {
+        categories: {
+          include: {
+            category: true
+          }
+        },
+        skills: {
+          include: {
+            skill: true
+          }
+        },
+        certifications: {
+          include: {
+            certification: true
+          }
+        },
+        serviceAreas: true,
+        baseLocation: true
+      }
+    });
+
+    return { workers, total: workers.length };
   }
 
   async getWorkerOwner(workerId) {

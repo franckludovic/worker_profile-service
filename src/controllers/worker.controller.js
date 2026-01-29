@@ -35,7 +35,7 @@ const getWorkerProfile = async (req, res) => {
 const updateWorkerProfile = async (req, res) => {
   const { worker_id } = req.params;
   const updateData = req.body;
-  const userId = req.user.id;
+  const userId = req.user.sub;
   const userRole = req.user.role;
   const profile = await workerService.updateWorkerProfile(worker_id, updateData, userId, userRole);
 
@@ -69,6 +69,13 @@ const deleteWorkerProfile = async (req, res) => {
 const checkWorkerService = async (req, res) => {
   const { worker_id, service_id } = req.params;
   const result = await workerService.checkWorkerService(worker_id, service_id);
+  res.json(result);
+};
+
+const filterWorkersByServices = async (req, res) => {
+  const { services } = req.query;
+  const serviceList = services ? services.split(',') : [];
+  const result = await workerService.filterWorkersByServices(serviceList);
   res.json(result);
 };
 

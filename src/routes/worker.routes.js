@@ -9,7 +9,7 @@ const { validateRequest } = require('../middlewares/validate.middleware');
 const createWorkerSchema = require('../validators/createWorker.schema');
 const updateWorkerSchema = require('../validators/updateWorker.schema');
 
-// List worker profiles
+// List worker profiles (supports filtering by categories, active status, and pagination)
 router.get('/workers', auth, workerController.listWorkerProfiles);
 
 // Create worker profile
