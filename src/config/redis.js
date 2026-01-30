@@ -17,4 +17,14 @@ const connectRedis = async () => {
   return redisClient;
 };
 
-module.exports = { connectRedis };
+// Initialize Redis client on module load
+let initializedClient;
+const getRedisClient = async () => {
+  if (!initializedClient) {
+    initializedClient = await connectRedis();
+  }
+  return initializedClient;
+};
+
+// Export the client promise
+module.exports = getRedisClient;

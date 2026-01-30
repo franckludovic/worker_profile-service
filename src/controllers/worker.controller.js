@@ -12,7 +12,7 @@ const listWorkerProfiles = async (req, res) => {
 
 const createWorkerProfile = async (req, res) => {
   const profileData = req.body;
-  const userId = req.user.sub; // Assuming user info from auth middleware
+  const userId = req.user.sub; 
   const profile = await workerService.createWorkerProfile(userId, profileData);
 
   // Publish worker created event

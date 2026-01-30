@@ -12,6 +12,33 @@ services:
       - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - hms-network
+
+  worker-service:
+    build: .
+    container_name: worker-service
+    restart: always
+    ports:
+      - '3002:3002'
+    environment:
+      PORT: 3002
+      DATABASE_URL: postgresql://postgres:1234567@worker-db:5432/worker_profile_and_services_service_db?schema=public
+      REDIS_EVENT_URL: redis://host.docker.internal:6384
+      REDIS_CACHE_URL: redis://host.docker.internal:6379
+      JWT_PUBLIC_KEY_PATH: /app/keys/jwt-public.pem
+      JWT_ISSUER: user-service
+      JWT_AUDIENCE: hms-service-clients
+    depends_on:
+      - worker-db
+    volumes:
+      - ./keys:/app/keys:ro
+    networks:
+      - hms-network
 
 volumes:
   postgres_data:
+
+networks:
+  hms-network:
+    external: true

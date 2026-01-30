@@ -4,10 +4,17 @@ const { calculateDistance } = require('../utils/geo');
 const axios = require('axios');
 const config = require('../config/config');
 const EventPublisher = require('./eventPublisher.service');
-const redisClient = require('../config/redis');
+const getRedisClient = require('../config/redis');
 const RedisCache = require('../utils/redisCache');
 
-const cache = new RedisCache(redisClient, 600); // 10 minutes default TTL
+// Initialize Redis client and cache synchronously
+let cachePromise;
+const getCache = async () => {
+  if (!cachePromise) {
+    cachePromise = getRedisClient().then(redisClient => new RedisCache(redisClient, 600));
+  }
+  return cachePromise;
+};
 
 class WorkerService {
   async listWorkerProfiles(filters, pagination, userLocation = null) {
@@ -179,11 +186,13 @@ class WorkerService {
   }
 
   async getWorkerProfile(workerId) {
+    const cacheInstance = await getCache();
+
     // Generate cache key for worker profile
     const cacheKey = `worker:${workerId}`;
 
     // Try to get from cache first
-    const cachedProfile = await cache.get(cacheKey);
+    const cachedProfile = await cacheInstance.get(cacheKey);
     if (cachedProfile) {
       try {
         return JSON.parse(cachedProfile);
@@ -224,7 +233,7 @@ class WorkerService {
 
     // Cache the worker profile (TTL: 5 minutes for worker data)
     try {
-      await cache.set(cacheKey, profile, 300);
+      await cacheInstance.set(cacheKey, profile, 300);
     } catch (error) {
       console.error('Error caching worker profile:', error);
       // Don't fail the request if caching fails
@@ -250,7 +259,8 @@ class WorkerService {
 
     // Invalidate worker cache
     try {
-      await cache.del(`worker:${workerId}`);
+      const cacheInstance = await getCache();
+      await cacheInstance.del(`worker:${workerId}`);
     } catch (error) {
       console.error('Error clearing worker cache after update:', error);
       // Don't fail the update if cache clearing fails
